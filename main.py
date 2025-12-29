@@ -49,9 +49,6 @@ def findNewPosts():
     current_ids = {post["id"] for post in data}
     seen_ids.update(current_ids)
 
-    # with open("seen_posts.json", "w") as f:
-    #     json.dump(list(seen_ids), f)
-
     logger.info(f"Found {len(new_posts)} new posts to process")
     return new_posts, seen_ids
 
