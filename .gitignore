@@ -3,6 +3,11 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+
+# output files to be avoided
+seen_posts.json
+podcasts_audio/
+
 # C extensions
 *.so
 
