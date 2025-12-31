@@ -74,7 +74,7 @@ def download_new_posts():
     successful_ids = []
     failed_posts = []
 
-    os.makedirs("podcasts_audio", exist_ok=True)
+    os.makedirs(f"{os.getenv("DOWNLOAD_PATH")}podcasts_audio", exist_ok=True)
 
     for post in new_posts:
         if post.get("file"):
@@ -83,7 +83,7 @@ def download_new_posts():
             url = f"{os.getenv("DEFAULT_SITE")}/data{path}"
 
             filename = post["file"]["name"]
-            filepath = os.path.join("podcasts_audio", filename)
+            filepath = os.path.join(f"{os.getenv("DOWNLOAD_PATH")}podcasts_audio", filename)
 
             if download_audio(url, filepath):
                 logger.info(f"Downloaded {post['title']}")
