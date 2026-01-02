@@ -81,7 +81,7 @@ def download_new_posts():
             path = post["file"]["path"]
             url = f"{os.getenv("DEFAULT_SITE")}/data{path}"
 
-            filename = f"{post["title"]}-{post["file"]["name"]}"
+            filename = f"{post["title"]}"
             filename = re.sub(r"[/\\?%*:|\"<>\x7F\x00-\x1F]", "-", filename)
             filepath = os.path.join(f"{os.getenv("DOWNLOAD_PATH")}podcasts_audio", filename)
 
