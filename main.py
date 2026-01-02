@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from urllib.parse import quote_plus
 import logging
 import datetime
-
+import re
 
 def findAllAudioLinks():
     tag = ""
@@ -46,9 +46,6 @@ def findNewPosts():
 
     new_posts = [post for post in data if post["id"] not in seen_ids]
 
-    current_ids = {post["id"] for post in data}
-    seen_ids.update(current_ids)
-
     logger.info(f"Found {len(new_posts)} new posts to process")
     return new_posts, seen_ids
 
@@ -60,7 +57,8 @@ def download_audio(url, filename):
     if response.status_code == 200:
         with open(filename, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
+                if chunk:
+                    f.write(chunk)
         print(f"Downloaded: {filename}")
         return True
     else:
@@ -71,6 +69,7 @@ def download_audio(url, filename):
 def download_new_posts():
     """Download all new audio posts"""
     new_posts, seen_ids = findNewPosts()
+    
     successful_ids = []
     failed_posts = []
 
@@ -82,12 +81,14 @@ def download_new_posts():
             path = post["file"]["path"]
             url = f"{os.getenv("DEFAULT_SITE")}/data{path}"
 
-            filename = post["file"]["name"]
+            filename = f"{post["title"]}-{post["file"]["name"]}"
+            filename = re.sub(r"[/\\?%*:|\"<>\x7F\x00-\x1F]", "-", filename)
             filepath = os.path.join(f"{os.getenv("DOWNLOAD_PATH")}podcasts_audio", filename)
 
             if download_audio(url, filepath):
                 logger.info(f"Downloaded {post['title']}")
                 successful_ids.append(post["id"])
+                print(successful_ids)
             else:
                 failed_posts.append(
                     {
