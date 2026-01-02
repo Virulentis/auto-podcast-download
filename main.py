@@ -115,9 +115,11 @@ def download_new_posts():
                         "id": post["id"],
                         "title": post["title"],
                         "url": url,
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.datetime.now().isoformat(),
                     }
                 )
+            logger.info(f"sleeping for {os.getenv("GRACE_PERIOD")} seconds")
+            time.sleep(int(os.getenv("GRACE_PERIOD")))
         else:
             logger.info(f"post {post['title']} has no file attached")
 
