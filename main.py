@@ -6,6 +6,9 @@ from urllib.parse import quote_plus
 import logging
 import datetime
 import re
+import time
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
 
 def findAllAudioLinks():
     tag = ""
@@ -52,19 +55,36 @@ def findNewPosts():
 
 def download_audio(url, filename):
     """Download a single audio file"""
-    response = requests.get(url, stream=True)
+    
+    retry_strategy = Retry(
+    total=4,
+    backoff_factor=4,
+    status_forcelist=[500, 502, 503, 504],
+    )
+    
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    session = requests.Session()
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
 
-    if response.status_code == 200:
+
+
+    try:
+        response = session.get(url, stream=True, timeout=(10, 300))
+        response.raise_for_status()
         with open(filename, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
                     f.write(chunk)
-        print(f"Downloaded: {filename}")
+        logger.info("Request successful!")
         return True
-    else:
-        print(f"Failed: {response.status_code}")
+    except requests.exceptions.HTTPError as http_err:
+        logger.error(f"HTTP error occurred: {http_err}")
         return False
-
+    except requests.exceptions.RequestException as req_err:
+        logger.error(f"Request exception occurred: {req_err}")
+        return False
+  
 
 def download_new_posts():
     """Download all new audio posts"""
@@ -81,7 +101,7 @@ def download_new_posts():
             path = post["file"]["path"]
             url = f"{os.getenv("DEFAULT_SITE")}/data{path}"
 
-            filename = f"{post["title"]}"
+            filename = f"{post["title"]}.mp3"
             filename = re.sub(r"[/\\?%*:|\"<>\x7F\x00-\x1F]", "-", filename)
             filepath = os.path.join(f"{os.getenv("DOWNLOAD_PATH")}podcasts_audio", filename)
 
